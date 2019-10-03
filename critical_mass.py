@@ -52,7 +52,7 @@ except:
 print("Running MCNP Test #",test_num)
 test_num += 1
 try:
-	os.system('mcnp6 i=/Users/raptor/Classes/NE-156/Homework-2/'+prob+'.txt tasks 4 >/dev/null 2>&1')
+	os.system('mcnp6 i=/Users/raptor/Classes/NE-156/Homework-2/'+prob+'.txt tasks 7 >/dev/null 2>&1')
 except Exception as e:
 	print(e)
 	print("Likely an error with some formatting in the MCNP input, check that and try again.")
@@ -71,20 +71,25 @@ if k_1 > 0.9995 and k_1 < 1.0005:
 #Far away runs of MCNP
 new_radius, io_rad = find_radii(prob, 'Inner Sphere', 'Outer Sphere')
 	
-far_from_critical = True
+far_from_critical, second = True, True
 	
 while far_from_critical:
-	if k_1 >= 1:
-		new_radius = new_radius - 1
-	elif k_1 <= 1:
-		new_radius = new_radius + 1
+	if second:
+		if k_1 >= 1:
+			if new_radius > 1:
+				new_radius = new_radius - 1
+			else:
+				new_radius = 0.5*new_radius
+		elif k_1 <= 1:
+			new_radius = new_radius + 1
+		second = False
 	adjust_radii(prob, 'Inner Sphere', '1 so '+str(new_radius))
 	if outer_radius1 is not None:
 		adjust_radii(prob, 'Outer Sphere', '*2 so '+str(outer_radius1+new_radius))
 	os.system('rm outp && rm runtpe && rm srctp')
 	print("Running MCNP Test #",test_num)
 	test_num += 1
-	os.system('mcnp6 i=/Users/raptor/Classes/NE-156/Homework-2/'+prob+'.txt tasks 4 >/dev/null 2>&1')
+	os.system('mcnp6 i=/Users/raptor/Classes/NE-156/Homework-2/'+prob+'.txt tasks 7 >/dev/null 2>&1')
 	k_2 = find_k()
 	print('Found k value of:',k_2)
 	if k_2 > 0.9995 and k_2 < 1.0005:
@@ -93,13 +98,35 @@ while far_from_critical:
 		print('With a density of '+str(density)+', this gives us a critical mass of: '+str(round(m_crit/1000,3))+'kg')
 		sys.exit()
 	
-	if k_2 <= 1.06 and k_2 >= 1 and k_1 <= 1:
+	if k_2 <= 0.94 and k_1 < 1:
+		new_radius = new_radius + 1
+	elif k_2 >= 0.94 and k_2 < 1 and k_1 < 1:
+		new_radius = new_radius + 1
+	elif k_2 <= 1.06 and k_2 > 1 and k_1 < 1:
 		far_from_critical = False
 		break
-	elif k_2 >= 0.94 and k_2 <= 1 and k_1 >= 1:
+	elif k_2 >= 1.06 and k_1 < 1:
+		k_values = [k_1, k_2]
+		r_values = [radius1, new_radius]
+		new_radius = np.interp(1.00, k_values, r_values)
+	elif k_2 <= 0.94 and k_1 > 1:
+		k_values = [k_2, k_1]
+		r_values = [new_radius, radius1]
+		new_radius = np.interp(1.00, k_values, r_values)
+	elif k_2 >= 0.94 and k_2 < 1 and k_1 > 1:
 		far_from_critical = False
 		break
-
+	elif k_2 <= 1.06 and k_2 > 1 and k_1 > 1:
+		if new_radius <= 1:
+			new_radius = 0.5*new_radius
+		else:
+			new_radius = new_radius - 1
+	elif k_2 <= 1.06 and k_1 > 1:
+		if new_radius <= 1:
+			new_radius = 0.5*new_radius
+		else:
+			new_radius = new_radius - 1
+		
 if k_2 > k_1:
 	k_values = [k_1, k_2]
 	r_values = [radius1, new_radius]
@@ -118,7 +145,7 @@ while not critical:
 	os.system('rm outp && rm runtpe && rm srctp')
 	print("Running MCNP Test #",test_num)
 	test_num += 1
-	os.system('mcnp6 i=/Users/raptor/Classes/NE-156/Homework-2/'+prob+'.txt tasks 4 >/dev/null 2>&1')
+	os.system('mcnp6 i=/Users/raptor/Classes/NE-156/Homework-2/'+prob+'.txt tasks 7 >/dev/null 2>&1')
 	k_new = find_k()
 	print('Found k value of:',k_new)
 	if k_new > 0.9995 and k_new < 1.0005:
