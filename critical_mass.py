@@ -53,7 +53,7 @@ def critical(prob, save):
 		if '5' not in prob:
 			density = float(lines[1][5:12].strip())
 		else:
-			density = float(lines[1][5:7].strip())
+			density = float(lines[1][5:].rstrip(' -1     imp:n=1          $ sphere of Solution\n'))
 		
 	del lines
 
@@ -102,7 +102,6 @@ def critical(prob, save):
 					new_radius = 0.5*new_radius
 			elif k_1 <= 1:
 				new_radius = new_radius + 1
-			second = False
 		adjust_radii(prob, 'Inner Sphere', '1 so '+str(new_radius))
 		if outer_radius1 is not None:
 			adjust_radii(prob, 'Outer Sphere', '2 so '+str(outer_radius1+new_radius))
@@ -121,35 +120,53 @@ def critical(prob, save):
 				return new_radius, m_crit
 			else:
 				sys.exit()
-		
+		"""
+		if second:
+			if k_2 > k_1:
+				k_values = [k_1, k_2]
+				r_values = [radius1, new_radius]
+			else:
+				k_values = [k_2, k_1]
+				r_values = [new_radius, radius1]
+			second = False
+		"""
+			
 		if k_2 <= 0.94 and k_1 < 1:
 			new_radius = new_radius + 1
+			#print('condition a')
 		elif k_2 >= 0.94 and k_2 < 1 and k_1 < 1:
 			new_radius = new_radius + 1
+			#print('condition b')
 		elif k_2 <= 1.06 and k_2 > 1 and k_1 < 1:
 			far_from_critical = False
+			#print('condition c')
 			break
 		elif k_2 >= 1.06 and k_1 < 1:
 			k_values = [k_1, k_2]
 			r_values = [radius1, new_radius]
 			new_radius = np.interp(1.00, k_values, r_values)
+			#print('condition d')
 		elif k_2 <= 0.94 and k_1 > 1:
 			k_values = [k_2, k_1]
 			r_values = [new_radius, radius1]
 			new_radius = np.interp(1.00, k_values, r_values)
+			#print('condition e')
 		elif k_2 >= 0.94 and k_2 < 1 and k_1 > 1:
 			far_from_critical = False
+			#print('condition f')
 			break
 		elif k_2 <= 1.06 and k_2 > 1 and k_1 > 1:
 			if new_radius <= 1:
 				new_radius = 0.5*new_radius
 			else:
 				new_radius = new_radius - 1
+			#print('condition g')
 		elif k_2 <= 1.06 and k_1 > 1:
 			if new_radius <= 1:
 				new_radius = 0.5*new_radius
 			else:
 				new_radius = new_radius - 1
+			#print('condition h')
 			
 	if k_2 > k_1:
 		k_values = [k_1, k_2]
